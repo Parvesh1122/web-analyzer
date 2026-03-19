@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>All-in-One Website Tester</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='logo.webp') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='index.css') }}"
+    />
+  </head>
+
+  <body>
+    <!----------------------------------------🔝 Navbar ---------------------------------------->
+
+    <nav class="navbar navbar-expand-lg navbar-dark custom-nav px-4 mb-5 fixed-top">
+      <!-- LEFT: LOGO -->
+      <a class="navbar-brand fw-bold fs-4" href="#">⚡ WebAnalyzer</a>
+
+      <!-- TOGGLE (mobile) -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navContent"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- CENTER + RIGHT -->
+      <div class="collapse navbar-collapse" id="navContent">
+        <!-- CENTER: MENU -->
+        <ul class="navbar-nav mx-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="#home">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#Analyze">Analyze</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#about">About</a>
+          </li>
+        </ul>
+
+        <!-- RIGHT: BUTTONS -->
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-light">Login</button>
+          <button class="btn btn-primary">Sign Up</button>
+        </div>
+      </div>
+    </nav>
+
+    <!----------------------------------------🔝 Hero ---------------------------------------->
+
+    <section id="home">
+      <div class="container text-center">
+        <img src="{{ url_for('static', filename='logo.webp') }}" class="logo" />
+
+        <h1 class="main-title">All-in-One Website Tester</h1>
+
+        <p class="subtitle">Test any website using a URL or uploaded files</p>
+
+        <!-- URL ANALYZE -->
+
+        <div class="url">
+          <form action="/analyze" method="POST">
+            <div class="row justify-content-center">
+              <div class="col-md-8">
+                <div class="input-group mb-3">
+                  <input
+                    type="text"
+                    name="url"
+                    class="form-control"
+                    placeholder="Enter website URL"
+                    required
+                  />
+
+                 <button class="btn btn-primary" onclick="showLoader()">Analyze Now</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="text-center mb-3">OR</div>
+
+        <!-- FILE UPLOAD -->
+
+        <div class="upload">
+          <form action="/upload" method="POST" enctype="multipart/form-data">
+            <div class="row justify-content-center">
+              <div class="col-md-6">
+                <div class="glass-box">
+                  <h4 class="mb-3">Upload Website Files</h4>
+
+                  <input
+                    class="form-control mb-3"
+                    id="fileInput"
+                    name="files"
+                    type="file"
+                    multiple
+                    accept=".zip,.html,.css,.js"
+                  />
+
+                  <button class="btn btn-primary w-100">Upload & Test</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="dragOverlay" class="drag-overlay">
+        Drop Files Anywhere to Upload
+      </div>
+    </section>
+
+    <!------------------------------- Result---------------------------------->
+    {% if show_result %}
+    <section id="analyzed">
+      <div class="container mt-5">
+        <div class="glass-box">
+          <!-- HEADER -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0">Website Performance Report</h3>
+            <span class="badge bg-success px-3 py-2">Analyzed</span>
+          </div>
+
+          <!-- SCORE CARDS -->
+
+          <div class="row text-center mb-4">
+            <div class="col-12 col-md-6 col-lg-3 mb-3">
+              <div class="metric-card">
+                <h5>Performance</h5>
+                <canvas id="perfGauge"></canvas>
+                <h2 class="counter" data-target="{{ performance }}">0</h2>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3 mb-3">
+              <div class="metric-card">
+                <h5>Accessibility</h5>
+                <canvas id="accessGauge"></canvas>
+                <h2 class="counter" data-target="{{ accessibility }}">0</h2>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3 mb-3">
+              <div class="metric-card">
+                <h5>Best Practices</h5>
+                <canvas id="bestGauge"></canvas>
+                <h2 class="counter" data-target="{{ best_practices  }}">0%</h2>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3 mb-3">
+              <div class="metric-card">
+                <h5>SEO</h5>
+                <canvas id="seoGauge"></canvas>
+                <h2 class="counter" data-target="{{ seo }}">0</h2>
+              </div>
+            </div>
+          </div>
+          <!-- OVERALL SCORE -->
+          <div class="text-center mt-4">
+            <div
+              style="
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                margin: auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 28px;
+                font-weight: bold;
+                background: radial-gradient(circle, #1e293b, #0f172a);
+                border: 5px solid #60a5fa;
+                box-shadow: 0 0 25px rgba(96, 165, 250, 0.6);
+              "
+            >
+              {{ overall }} <span>%</span>
+            </div>
+            <p class="mt-2">Overall Score</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {% endif %}
+
+    <!----------------------------------------🔝 About ---------------------------------------->
+   <section id="about" class="about-section container mt-5">
+    <div class="text-center text-white mb-5 intro-section">
+      <h1 class="fw-bold gradient-text mb-3">
+        ⚡ Analyze. Improve. Grow.
+      </h1>
+
+      <p class="lead">
+        Get a complete health report of your website in seconds.
+      </p>
+
+      <p class="sub-text">
+        We test your website across four key areas:
+        <strong>Performance</strong>, <strong>Accessibility</strong>,
+        <strong>Best Practices</strong>, and <strong>SEO</strong>.
+        Click on each tab below to explore detailed results.
+      </p>
+    </div>
+      <!-- 🔝 TABS -->
+      <ul class="nav nav-tabs justify-content-center mb-4 custom-tabs">
+        <li class="nav-item">
+          <button
+            class="nav-link active"
+            data-bs-toggle="tab"
+            data-bs-target="#performance"
+          >
+            Performance
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            data-bs-toggle="tab"
+            data-bs-target="#accessibility"
+          >
+            Accessibility
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#best">
+            Best Practices
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#seo">
+            SEO
+          </button>
+        </li>
+      </ul>
+
+      <!-- 📦 TAB CONTENT -->
+      <div class="tab-content">
+        <!-- ⚡ PERFORMANCE -->
+        <div class="tab-pane fade show active" id="performance">
+          <div class="row align-items-center">
+            <!-- LEFT IMAGE (col-md-4) -->
+            <div class="col-md-4 mb-4">
+              <div class="image-box text-center">
+                <img src="{{ url_for('static', filename='performance1.png') }}" class="img-fluid">
+              </div>
+            </div>
+
+            <!-- RIGHT TEXT (col-md-8) -->
+            <div class="col-md-8">
+
+              <h2 class="mb-3">
+                ⚡ Performance
+              </h2>
+
+              <p class="text-muted">
+                Performance measures how fast your website loads and responds.
+                A fast website improves user experience and search engine rankings.
+              </p>
+
+              <!-- HOW WE TEST -->
+              <h5 class="mt-4">How We Test Performance</h5>
+              <ul class="list-unstyled custom-list mt-3">
+                <li><span>✔ Page Load Time –</span> Measures how quickly your website loads.</li>
+                <li><span>✔ Server Response Time –</span> Time taken by server to respond.</li>
+                <li><span>✔ Rendering –</span> How efficiently pages are displayed.</li>
+                <li><span>✔ Code Optimization –</span> Checks CSS, JS, and performance issues.</li>              
+              </ul>
+
+              <!-- SCENARIOS -->
+              <h5 class="mt-4">Our Scenarios</h5>
+              <ul class="list-unstyled custom-list mt-3">
+                <li><span>✔ Multiple Locations –</span> Tests from different regions.</li>
+                <li><span>✔ Different Devices –</span> Desktop & mobile performance.</li>
+                <li><span>✔ Speed Metrics –</span> Measures load & response behavior.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ♿ ACCESSIBILITY -->
+        <div class="tab-pane fade" id="accessibility">
+          <div class="row align-items-center">
+              <!-- LEFT TEXT (col-md-8) -->
+          <div class="col-md-8">
+
+            <h2 class="mb-3">
+              ♿ Accessibility
+            </h2>
+
+            <p class="text-muted">
+              Accessibility ensures your website can be used by everyone, including people with disabilities.
+              It improves usability, readability, and inclusiveness.
+            </p>
+
+            <!-- HOW WE TEST -->
+            <h5 class="mt-4">How We Test Accessibility</h5>
+            <ul class="list-unstyled custom-list mt-3">
+              <li><span>✔ Color Contrast –</span> Ensures text is readable against background.</li>
+              <li><span>✔ Screen Reader Support –</span> Checks compatibility with assistive tools.</li>
+              <li><span>✔ Alt Text –</span> Verifies images have proper descriptions.</li>
+              <li><span>✔ Keyboard Navigation –</span> Ensures site works without a mouse.</li>            
+            </ul>
+
+            <!-- SCENARIOS -->
+            <h5 class="mt-4">Our Scenarios</h5>
+            <ul class="list-unstyled custom-list mt-3">
+              <li><span>✔ Assistive Devices –</span> Tested with screen readers.</li>
+              <li><span>✔ Different Users –</span> Evaluates usability for all users.</li>
+              <li><span>✔ UI Clarity –</span> Checks layout and readability.</li>            
+            </ul>
+
+          </div>
+
+          <!-- RIGHT IMAGE (col-md-4) -->
+          <div class="col-md-4 mb-4">
+            <div class="image-box text-center">
+              <img src="{{ url_for('static', filename='accessibility.png') }}" class="img-fluid">
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+       <!-- ♿ Best Practices -->
+        <div class="tab-pane fade" id="best">
+          <div class="row align-items-center">
+            <!-- LEFT IMAGE (col-md-4) -->
+            <div class="col-md-4 mb-4">
+              <div class="image-box text-center">
+                <img src="{{ url_for('static', filename='best.png') }}" class="img-fluid">
+              </div>
+            </div>
+
+            <!-- RIGHT TEXT (col-md-8) -->
+            <div class="col-md-8">
+
+              <h2 class="mb-3">
+                🛠 Best Practices
+              </h2>
+
+              <p class="text-muted">
+                Best Practices ensure your website follows modern standards for security, performance,
+                and code quality. It helps keep your site stable, safe, and efficient.
+              </p>
+
+              <!-- HOW WE TEST -->
+              <h5 class="mt-4">How We Test Best Practices</h5>
+              <ul class="list-unstyled custom-list mt-3">
+                <li><span>✔ HTTPS Security –</span> Ensures your site uses secure connections.</li>
+                <li><span>✔ Console Errors –</span> Checks for JavaScript errors in the browser.</li>
+                <li><span>✔ Code Standards –</span> Verifies clean and modern coding practices.</li>
+                <li><span>✔ Resource Optimization –</span> Detects unused or inefficient files.</li>            
+              </ul>
+
+              <!-- SCENARIOS -->
+              <h5 class="mt-4">Our Scenarios</h5>
+              <ul class="list-unstyled custom-list mt-3">
+                <li><span>✔ Security Checks –</span> Tests for safe and secure implementation.</li>
+                <li><span>✔ Real Browser Testing –</span> Simulates real user environments.</li>
+                <li><span>✔ Stability Analysis –</span> Ensures smooth and error-free behavior.</li>              
+              </ul>
+
+            </div>
+      </div>
+      </div> 
+
+       <!-- ♿ SEO -->
+      <div class="tab-pane fade" id="seo">
+        <div class="row align-items-center">
+
+          <!-- LEFT TEXT (col-md-8) -->
+          <div class="col-md-8">
+
+            <h2 class="mb-3">
+              🔍 SEO (Search Engine Optimization)
+            </h2>
+
+            <p class="text-muted">
+              SEO helps your website rank higher on search engines like Google.
+              It improves visibility, traffic, and overall online presence.
+            </p>
+
+            <!-- HOW WE TEST -->
+            <h5 class="mt-4">How We Test SEO</h5>
+            <ul class="list-unstyled custom-list mt-3">
+              <li><span>✔ Meta Tags –</span> Checks title and description optimization.</li>
+              <li><span>✔ Keywords –</span> Analyzes keyword usage and relevance.</li>
+              <li><span>✔ Heading Structure –</span> Ensures proper use of H1, H2, etc.</li>
+              <li><span>✔ Mobile Friendliness –</span> Verifies responsive design.</li>            
+            </ul>
+
+            <!-- SCENARIOS -->
+            <h5 class="mt-4">Our Scenarios</h5>
+            <ul class="list-unstyled custom-list mt-3">
+              <li><span>✔ Search Engine Simulation –</span> Tests indexing behavior.</li>
+              <li><span>✔ Content Analysis –</span> Evaluates readability and structure.</li>
+              <li><span>✔ Ranking Factors –</span> Checks elements affecting SEO score.</li>            
+            </ul>
+
+          </div>
+
+          <!-- RIGHT IMAGE (col-md-4) -->
+          <div class="col-md-4 mb-4">
+            <div class="image-box text-center">
+              <img src="{{ url_for('static', filename='seo.png') }}" class="img-fluid">
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+    <!---------------- footer--------------->
+
+    <footer class="footer mt-5" style="text-align: left;">
+      <div class="container"> 
+        <!-- ✅ ADD THIS -->
+
+        <!-- NEWSLETTER -->
+        <div class="text-center mb-4">
+          <h2>🚀 Stay Updated</h2>
+          <p>Get tips to improve your website performance, SEO, and speed.</p>
+
+          <div class="input-group w-50 mx-auto">
+            <input type="email" class="form-control" placeholder="Enter your email">
+            <button class="btn btn-primary">Subscribe</button>
+          </div>
+        </div>
+
+        <!-- FOOTER CONTENT -->
+        <div class="row text-white mt-5">
+          <div class="col-md-3">
+            <h4>⚡ WebAnalyzer</h4>
+            <p>Analyze your website’s performance, accessibility, best practices, and SEO in one place.</p>
+          </div>
+
+          <div class="col-md-3">
+            <h5>Quick Links</h5>
+            <ul class="list-unstyled">
+              <li>Home</li>
+              <li>Analyze</li>
+              <li>About</li>
+            </ul>
+          </div>
+
+          <div class="col-md-3">
+            <h5>Features</h5>
+            <ul class="list-unstyled">
+              <li>Performance Testing</li>
+              <li>Accessibility Check</li>
+              <li>SEO Analysis</li>
+              <li>Best Practices</li>
+            </ul>
+          </div>
+
+          <div class="col-md-3">
+            <h5>About</h5>
+            <p>Built to help developers and businesses improve their websites.</p>
+            <div>
+                <a
+                  href="https://wa.me/917707840386?text=Hi%20Parvesh%2C%20I%20want%20to%20discuss%20a%20project"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="social-icon whatsapp-btn ms-2"
+                >
+                  <i class="bi bi-whatsapp"></i>
+                </a>
+                <a
+                  href="mailto:dhiman.kumar1903@gmail.com"
+                  class="social-icon email-btn ms-2"
+                >
+                  <i class="bi bi-envelope-fill"></i>
+                </a>
+              </div>
+          </div>
+        </div>
+
+        <!-- COPYRIGHT -->
+        <div class="text-center mt-5">
+          <p>© 2026 All Rights Reserved By <span class="name">Parvesh</span></p>
+          <p class="sub">Designed with ❤️ ❤️</p>
+        </div>
+
+      </div> <!-- ✅ END CONTAINER -->
+
+    </footer>
+
+    <!----------------Script--------------->
+    <script>
+      const overlay = document.getElementById("dragOverlay");
+      const fileInput = document.getElementById("fileInput");
+
+      document.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        overlay.classList.add("active");
+      });
+
+      document.addEventListener("dragleave", () => {
+        overlay.classList.remove("active");
+      });
+
+      document.addEventListener("drop", (e) => {
+        e.preventDefault();
+        overlay.classList.remove("active");
+        fileInput.files = e.dataTransfer.files;
+      });
+
+      document.querySelectorAll(".counter").forEach(counter => {
+      let target = +counter.getAttribute("data-target");
+      let count = 0;
+      let speed = target / 50;
+
+      let update = () => {
+        if (count < target) {
+          count += speed;
+          counter.innerText = Math.floor(count);
+          requestAnimationFrame(update);
+        } else {
+          counter.innerText = target;
+        }
+      };
+
+    update();
+    });
+
+    function createGauge(id, value, color) {
+        new Chart(document.getElementById(id), {
+          type: 'doughnut',
+          data: {
+            datasets: [{
+              data: [value, 100 - value],
+              backgroundColor: [color, "#2a2a2a"],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            cutout: "75%",
+            plugins: { legend: { display: false } },
+          }
+        });
+      }
+
+      createGauge("perfGauge", {{ performance }}, "#00d4ff");
+      createGauge("accessGauge", {{ accessibility }}, "#ffc107");
+      createGauge("bestGauge", {{ best_practices }}, "#28a745");
+      createGauge("seoGauge", {{ seo }}, "#0d6efd");
+
+      function showLoader(){
+      document.body.innerHTML += "<div class='loader'>Analyzing...</div>";
+}
+      
+    </script>
+  </body>
+</html>
