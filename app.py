@@ -3,6 +3,8 @@ import requests
 from dotenv import load_dotenv
 import os
 
+load_dotenv()  
+
 app = Flask(__name__)
 
 API_KEY = os.getenv("API_KEY")
@@ -23,7 +25,7 @@ def analyze():
         user_url = "https://" + user_url
 
     api_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={user_url}&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo&key={API_KEY}"    
-    res = requests.get(api_url)
+    res = requests.get(api_url, timeout=10)
     data = res.json()
 
     if "lighthouseResult" not in data:
