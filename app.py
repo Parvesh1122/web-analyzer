@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request
 import requests
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 app = Flask(__name__)
 
-API_KEY = "AIzaSyCmiIHlXygxN_YJOUMrJFL3eCmVtNc22dY"
+API_KEY = os.getenv("API_KEY")
 
 @app.route("/")
 def home():
@@ -54,3 +57,6 @@ def upload():
 
 if __name__ == "__main__":
      app.run(host="0.0.0.0", port=10000)
+     
+
+print("API KEY:", API_KEY)
