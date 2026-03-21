@@ -3,7 +3,6 @@ import requests
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
 app = Flask(__name__)
 
 API_KEY = os.getenv("API_KEY")
@@ -28,8 +27,7 @@ def analyze():
     data = res.json()
 
     if "lighthouseResult" not in data:
-        return "Error fetching data"
-
+        return render_template("index.html", show_result=False, error="Failed to fetch data. Try again.")
     lighthouse = data["lighthouseResult"]["categories"]
 
     performance = lighthouse.get("performance", {}).get("score", 0) * 100
@@ -59,4 +57,3 @@ if __name__ == "__main__":
      app.run(host="0.0.0.0", port=10000)
      
 
-print("API KEY:", API_KEY)
