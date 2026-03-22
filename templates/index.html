@@ -560,10 +560,14 @@
         });
       }
 
-      createGauge("perfGauge", {{ performance }}, "#00d4ff");
-      createGauge("accessGauge", {{ accessibility }}, "#ffc107");
-      createGauge("bestGauge", {{ best_practices }}, "#28a745");
-      createGauge("seoGauge", {{ seo }}, "#0d6efd");
+     <script>
+{% if show_result %}
+  createGauge("perfGauge", {{ performance|default(0) }}, "#00d4ff");
+  createGauge("accessGauge", {{ accessibility|default(0) }}, "#ffc107");
+  createGauge("bestGauge", {{ best_practices|default(0) }}, "#28a745");
+  createGauge("seoGauge", {{ seo|default(0) }}, "#0d6efd");
+{% endif %}
+</script>
 
       function showLoader(){
       document.body.innerHTML += "<div class='loader'>Analyzing...</div>";
